@@ -10,6 +10,7 @@ import type { ContentElement } from "./pdf/types";
 export interface Env {
   PDF_BUCKET: R2Bucket;
   PDF_MCP: DurableObjectNamespace;
+  WORKER_URL: string;
 }
 
 export interface PDFMcpState {
@@ -132,7 +133,7 @@ export class PDFMcpAgent extends McpAgent<Env, PDFMcpState> {
             this.env.PDF_BUCKET,
             filename,
             pdfBytes,
-            { baseUrl: "" }
+            { baseUrl: this.env.WORKER_URL }
           );
 
           // Build response

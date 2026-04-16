@@ -22,6 +22,12 @@
     ]
   },
 
+  // Environment variables
+  // Production WORKER_URL should be set via Cloudflare dashboard or `wrangler secret`
+  "vars": {
+    "WORKER_URL": "http://localhost:8787"
+  },
+
   "migrations": [
     {
       "tag": "v1",
