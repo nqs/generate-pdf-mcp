@@ -9,7 +9,7 @@ import type { ContentElement } from "./pdf/types";
 
 export interface Env {
   PDF_BUCKET: R2Bucket;
-  PDF_MCP: DurableObjectNamespace;
+  MCP_OBJECT: DurableObjectNamespace;
   WORKER_URL: string;
 }
 

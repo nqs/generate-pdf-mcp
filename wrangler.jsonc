@@ -16,7 +16,7 @@
   "durable_objects": {
     "bindings": [
       {
-        "name": "PDF_MCP",
+        "name": "MCP_OBJECT",
         "class_name": "PDFMcpAgent"
       }
     ]
