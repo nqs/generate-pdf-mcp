@@ -50,7 +50,7 @@ export class PDFMcpAgent extends McpAgent<Env, PDFMcpState> {
           content: z
             .string()
             .describe(
-              "JSON string of content elements array. Each element has a 'type' field (title, h1, h2, h3, paragraph, image, image_url, list, table, page_break, blockquote, divider) and type-specific fields."
+              "JSON string of content elements array. Each element has a 'type' field (title, h1, h2, h3, paragraph, image, image_url, list, table, page_break, blockquote, divider, markdown) and type-specific fields."
             ),
         },
       },

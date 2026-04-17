@@ -1,4 +1,5 @@
 import { rgb } from "pdf-lib";
+import { marked, type Token, type Tokens } from "marked";
 import type { PDFLayoutEngine } from "./engine";
 import type {
   ContentElement,
@@ -12,6 +13,7 @@ import type {
   ListElement,
   TableElement,
   BlockquoteElement,
+  MarkdownElement,
 } from "./types";
 import { wrapText } from "../utils/text";
 import { decodeBase64, detectImageFormat, fetchImageAsBytes } from "../utils/images";
@@ -52,6 +54,8 @@ export async function renderElement(
       return renderBlockquote(engine, element);
     case "divider":
       return renderDivider(engine);
+    case "markdown":
+      return renderMarkdown(engine, element);
   }
 }
 
@@ -384,4 +388,95 @@ function renderDivider(engine: PDFLayoutEngine): void {
   });
 
   engine.moveCursor(spacingBelow);
+}
+
+// ---------------------------------------------------------------------------
+// Markdown support
+// ---------------------------------------------------------------------------
+
+/**
+ * Recursively extract plain text from a marked token and its inline children.
+ * Strips bold, italic, code, link formatting — keeps only the text content.
+ */
+function extractPlainText(token: Token | Tokens.TableCell): string {
+  // Tokens with a `text` property and possible child `tokens`
+  if ("tokens" in token && Array.isArray(token.tokens)) {
+    return token.tokens.map(extractPlainText).join("");
+  }
+  if ("text" in token && typeof token.text === "string") {
+    return token.text;
+  }
+  return "";
+}
+
+/**
+ * Parse Markdown text and render each block using existing element renderers.
+ */
+async function renderMarkdown(engine: PDFLayoutEngine, element: MarkdownElement): Promise<void> {
+  const tokens = marked.lexer(element.text);
+
+  for (const token of tokens) {
+    switch (token.type) {
+      case "heading": {
+        const depthMap: Record<number, ContentElement> = {
+          1: { type: "title", text: extractPlainText(token) },
+          2: { type: "h1", text: extractPlainText(token) },
+          3: { type: "h2", text: extractPlainText(token) },
+        };
+        const el: ContentElement = depthMap[token.depth] ?? { type: "h3", text: extractPlainText(token) };
+        await renderElement(engine, el);
+        break;
+      }
+      case "paragraph": {
+        const text = extractPlainText(token);
+        if (text.trim()) {
+          await renderElement(engine, { type: "paragraph", text });
+        }
+        break;
+      }
+      case "list": {
+        const style = token.ordered ? "numbered" : "bullet";
+        const items = token.items.map((item: Tokens.ListItem) => extractPlainText(item));
+        if (items.length > 0) {
+          await renderElement(engine, { type: "list", style, items });
+        }
+        break;
+      }
+      case "blockquote": {
+        const text = extractPlainText(token);
+        if (text.trim()) {
+          await renderElement(engine, { type: "blockquote", text: text.trim() });
+        }
+        break;
+      }
+      case "hr": {
+        await renderElement(engine, { type: "divider" });
+        break;
+      }
+      case "table": {
+        const headers = token.header.map((cell: Tokens.TableCell) => extractPlainText(cell));
+        const rows = token.rows.map((row: Tokens.TableCell[]) =>
+          row.map((cell: Tokens.TableCell) => extractPlainText(cell))
+        );
+        if (headers.length > 0 && rows.length > 0) {
+          await renderElement(engine, { type: "table", headers, rows });
+        }
+        break;
+      }
+      case "code": {
+        const text = token.text;
+        if (text.trim()) {
+          await renderElement(engine, { type: "paragraph", text });
+        }
+        break;
+      }
+      case "space":
+      case "html":
+        // Skip whitespace-only tokens and raw HTML
+        break;
+      default:
+        // Unknown token types are silently ignored
+        break;
+    }
+  }
 }

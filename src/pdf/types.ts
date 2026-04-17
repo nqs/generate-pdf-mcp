@@ -166,6 +166,12 @@ export interface DividerElement {
   type: "divider";
 }
 
+/** Raw Markdown content that gets parsed and rendered using existing element types. */
+export interface MarkdownElement {
+  type: "markdown";
+  text: string;
+}
+
 /** Union of every supported content element (discriminated on `type`). */
 export type ContentElement =
   | TitleElement
@@ -179,7 +185,8 @@ export type ContentElement =
   | TableElement
   | PageBreakElement
   | BlockquoteElement
-  | DividerElement;
+  | DividerElement
+  | MarkdownElement;
 
 // ---------------------------------------------------------------------------
 // Top-level tool input / output

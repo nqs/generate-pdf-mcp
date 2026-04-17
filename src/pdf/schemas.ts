@@ -108,6 +108,11 @@ export const DividerSchema = z.object({
   type: z.literal("divider"),
 });
 
+export const MarkdownSchema = z.object({
+  type: z.literal("markdown"),
+  text: z.string().min(1),
+});
+
 // ---------------------------------------------------------------------------
 // Discriminated union of all content elements
 // ---------------------------------------------------------------------------
@@ -125,6 +130,7 @@ export const ContentElementSchema = z.discriminatedUnion("type", [
   PageBreakSchema,
   BlockquoteSchema,
   DividerSchema,
+  MarkdownSchema,
 ]);
 
 // ---------------------------------------------------------------------------

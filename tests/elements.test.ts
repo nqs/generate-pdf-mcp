@@ -193,3 +193,100 @@ describe("integration: full PDF with all element types", () => {
   });
 });
 
+describe("renderElement — markdown", () => {
+  let engine: PDFLayoutEngine;
+
+  beforeEach(async () => {
+    engine = new PDFLayoutEngine({ pageSize: "Letter" });
+    await engine.initialize();
+  });
+
+  it("renders heading + paragraph", async () => {
+    const startY = engine.getCursorY();
+    await renderElement(engine, { type: "markdown", text: "# Hello\n\nWorld" });
+    expect(engine.getCursorY()).toBeLessThan(startY);
+  });
+
+  it("renders a list", async () => {
+    const startY = engine.getCursorY();
+    await renderElement(engine, { type: "markdown", text: "- Alpha\n- Beta\n- Gamma" });
+    expect(engine.getCursorY()).toBeLessThan(startY);
+  });
+
+  it("renders a blockquote", async () => {
+    const startY = engine.getCursorY();
+    await renderElement(engine, { type: "markdown", text: "> Some wise words" });
+    expect(engine.getCursorY()).toBeLessThan(startY);
+  });
+
+  it("renders a horizontal rule", async () => {
+    const startY = engine.getCursorY();
+    await renderElement(engine, { type: "markdown", text: "---" });
+    expect(engine.getCursorY()).toBeLessThan(startY);
+  });
+
+  it("renders a table", async () => {
+    const startY = engine.getCursorY();
+    await renderElement(engine, {
+      type: "markdown",
+      text: "| Name | Age |\n| --- | --- |\n| Alice | 30 |\n| Bob | 25 |",
+    });
+    expect(engine.getCursorY()).toBeLessThan(startY);
+  });
+
+  it("renders mixed content", async () => {
+    const md = [
+      "# Title",
+      "",
+      "A paragraph here.",
+      "",
+      "- Item one",
+      "- Item two",
+      "",
+      "> A quote",
+      "",
+      "---",
+    ].join("\n");
+
+    await renderElement(engine, { type: "markdown", text: md });
+    const bytes = await engine.save();
+    expect(bytes).toBeInstanceOf(Uint8Array);
+    expect(bytes.length).toBeGreaterThan(0);
+  });
+
+  it("strips inline formatting gracefully", async () => {
+    const startY = engine.getCursorY();
+    await renderElement(engine, {
+      type: "markdown",
+      text: "This has **bold**, *italic*, `code`, and [a link](https://example.com).",
+    });
+    expect(engine.getCursorY()).toBeLessThan(startY);
+  });
+
+  it("handles whitespace-only markdown without crashing", async () => {
+    const startY = engine.getCursorY();
+    await renderElement(engine, { type: "markdown", text: "   \n\n   " });
+    // Cursor may or may not move, but it should not throw
+    expect(engine.getCursorY()).toBeLessThanOrEqual(startY);
+  });
+
+  it("renders fenced code blocks as paragraphs", async () => {
+    const startY = engine.getCursorY();
+    await renderElement(engine, {
+      type: "markdown",
+      text: "```\nconst x = 1;\nconsole.log(x);\n```",
+    });
+    expect(engine.getCursorY()).toBeLessThan(startY);
+  });
+
+  it("maps heading depths correctly", async () => {
+    // depth 1 = title, depth 2 = h1, depth 3 = h2, depth 4+ = h3
+    const startY = engine.getCursorY();
+    await renderElement(engine, {
+      type: "markdown",
+      text: "# Title\n\n## H1\n\n### H2\n\n#### H3\n\n##### Also H3",
+    });
+    expect(engine.getCursorY()).toBeLessThan(startY);
+  });
+});
+

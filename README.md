@@ -4,7 +4,7 @@ MCP server on Cloudflare Workers that generates PDF documents from structured JS
 
 ## Features
 
-- **11 content element types** — title, h1–h3, paragraph, image, image\_url, list, table, page\_break, blockquote, divider
+- **12 content element types** — title, h1–h3, paragraph, image, image\_url, list, table, page\_break, blockquote, divider, markdown
 - **Fully customizable style sheets** — override fonts, sizes, colors, margins, and line height
 - **3 page sizes** — A4, Letter, Legal
 - **Image support** — base64 image embedding and remote URL image fetching
@@ -137,6 +137,14 @@ The `content` parameter accepts a JSON array of elements. Each element has a `ty
     ["Bob", "Designer", "On Leave"]
   ]
 }
+```
+
+### Markdown
+
+Accepts raw Markdown text and renders it using the existing element types (headings, paragraphs, lists, blockquotes, dividers, tables). Inline formatting (bold, italic, code, links) is stripped to plain text.
+
+```json
+{ "type": "markdown", "text": "# Introduction\n\nThis is a **paragraph**.\n\n- Item one\n- Item two\n\n> A blockquote\n\n---" }
 ```
 
 ### Layout

@@ -40,6 +40,7 @@ const validFullInput = {
     { type: "page_break" },
     { type: "blockquote", text: "A wise quote." },
     { type: "divider" },
+    { type: "markdown", text: "# Hello\n\nWorld" },
   ],
 };
 
@@ -59,7 +60,7 @@ describe("GeneratePDFInputSchema — valid payloads", () => {
     const result = GeneratePDFInputSchema.parse(validFullInput);
     expect(result.filename).toBe("report.pdf");
     expect(result.style?.fontFamily).toBe("TimesRoman");
-    expect(result.content).toHaveLength(13);
+    expect(result.content).toHaveLength(14);
   });
 });
 
@@ -156,6 +157,23 @@ describe("ContentElementSchema — invalid elements", () => {
   it("rejects table with empty rows", () => {
     expect(() =>
       ContentElementSchema.parse({ type: "table", headers: ["A"], rows: [] })
+    ).toThrow();
+  });
+
+  it("accepts valid markdown element", () => {
+    const result = ContentElementSchema.parse({ type: "markdown", text: "# Hello" });
+    expect(result).toEqual({ type: "markdown", text: "# Hello" });
+  });
+
+  it("rejects markdown with empty text", () => {
+    expect(() =>
+      ContentElementSchema.parse({ type: "markdown", text: "" })
+    ).toThrow();
+  });
+
+  it("rejects markdown with missing text", () => {
+    expect(() =>
+      ContentElementSchema.parse({ type: "markdown" })
     ).toThrow();
   });
 });
