@@ -31,7 +31,7 @@
   "migrations": [
     {
       "tag": "v1",
-      "new_classes": ["PDFMcpAgent"]
+      "new_sqlite_classes": ["PDFMcpAgent"]
     }
   ]
 }
